@@ -36,6 +36,7 @@ async function run() {
         const userCollection = client.db('assetManagement').collection('user')
         const AssetCollection = client.db('assetManagement').collection('asssets')
         const TeamtCollection = client.db('assetManagement').collection('Teams')
+        const RequestCollection = client.db('assetManagement').collection('requests')
 
 
         app.post('/adddAdmin', async (req, res) => {
@@ -89,6 +90,69 @@ async function run() {
             }
         })
 
+
+        app.get('/all-asset', async (req, res) => {
+            const queryValue = req.query
+            console.log(queryValue.type)
+
+            if (queryValue.search) {
+                const query = {
+                    assetName: { $regex: queryValue.search, $options: 'i' }
+                }
+                const result = await AssetCollection.find(query).toArray()
+                res.send(result)
+            }
+            else if (queryValue.type === 'availableStock') {
+                const query = { assetQuantity: { $gt: 0 } };
+                const result = await AssetCollection.find(query).toArray()
+                res.send(result)
+                console.log('Hello Bangladesh')
+            }
+
+
+            else if (queryValue.type) {
+                const query = { assetType: queryValue.type }
+
+                const result = await AssetCollection.find(query).toArray()
+                res.send(result)
+            }
+
+
+            else if (queryValue.type && queryValue.type) {
+                const combinedFilter = {
+                    $and: [
+                        { assetName: { $regex: queryValue.search, $options: 'i' } },
+                        { assetType: queryValue.type }
+                    ]
+                };
+                const result = await AssetCollection.find(combinedFilter).toArray()
+                res.send(result)
+            }
+
+
+            else {
+                const result = await AssetCollection.find().toArray()
+                res.send(result)
+            }
+        })
+
+        app.post('/send-request', async (req, res) => {
+            const requestData = req.body
+            const assetId = requestData.singleAsset._id
+            console.log(assetId)
+            const filter = { _id: new ObjectId(assetId) }
+            const UpdateAsset = {
+                $inc: {
+                    assetQuantity: -1
+                }
+            }
+            const updateAssets = await AssetCollection.updateOne(filter, UpdateAsset)
+            console.log(updateAssets)
+            const result = await RequestCollection.insertOne(requestData)
+            res.send({ result, updateAssets })
+        })
+
+
         app.get('/emplyees', async (req, res) => {
             const combinedFilter = {
                 $and: [
@@ -103,18 +167,18 @@ async function run() {
 
         })
 
-        app.get('/team-employee/:email', async(req, res) =>{
+        app.get('/team-employee/:email', async (req, res) => {
             const adminEmail = req.params.email
-            const filter = {adminEmail: adminEmail}
+            const filter = { adminEmail: adminEmail }
             const result = await TeamtCollection.find(filter).toArray()
             res.send(result)
         })
 
-        app.delete('/remove-emplyees/:id', async (req, res) =>{
+        app.delete('/remove-emplyees/:id', async (req, res) => {
             const Id = req.params.id
             const EmId = req.query.employeId
 
-            const filter = {_id: new ObjectId(EmId)}
+            const filter = { _id: new ObjectId(EmId) }
 
             const UpdateEmployee = {
                 $set: {
@@ -123,17 +187,17 @@ async function run() {
             }
 
             const updateEmployee = await userCollection.updateOne(filter, UpdateEmployee)
-    
-            const query = {_id: new ObjectId(Id)}
-            
+
+            const query = { _id: new ObjectId(Id) }
+
             const result = await TeamtCollection.deleteOne(query)
-            res.send({result, updateEmployee})
+            res.send({ result, updateEmployee })
         })
 
-        app.post('/add-employee', async(req, res) =>{
+        app.post('/add-employee', async (req, res) => {
             const TeamData = req.body
-            const EmployeeId =TeamData.employee._id
-            const filter = {_id: new ObjectId(EmployeeId)}
+            const EmployeeId = TeamData.employee._id
+            const filter = { _id: new ObjectId(EmployeeId) }
 
             const UpdateEmployee = {
                 $set: {
@@ -144,10 +208,10 @@ async function run() {
             const updateEmployee = await userCollection.updateOne(filter, UpdateEmployee)
 
             const result = await TeamtCollection.insertOne(TeamData)
-            res.send({result, updateEmployee})
+            res.send({ result, updateEmployee })
         })
 
-        
+
 
         app.post('/add-asset', async (req, res) => {
             const AssetData = req.body
@@ -161,9 +225,9 @@ async function run() {
         // Employee Section
 
 
-        app.get(`/my-team/:email`, async(req, res) =>{
+        app.get(`/my-team/:email`, async (req, res) => {
             const email = req.params.email
-            const query = {'employee.email': email}
+            const query = { 'employee.email': email }
             const result = await TeamtCollection.findOne(query)
             res.json(result)
         })
