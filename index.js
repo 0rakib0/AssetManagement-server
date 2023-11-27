@@ -215,6 +215,13 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/admin-request/:email', async(req, res) =>{
+            const Email = req.params.email
+            const filter = {'singleAsset.email': Email}
+            const result = await RequestCollection.find(filter).toArray()
+            res.json(result)
+        })
+
 
 
 
