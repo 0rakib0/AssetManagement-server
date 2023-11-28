@@ -37,6 +37,7 @@ async function run() {
         const AssetCollection = client.db('assetManagement').collection('asssets')
         const TeamtCollection = client.db('assetManagement').collection('Teams')
         const RequestCollection = client.db('assetManagement').collection('requests')
+        const CustomRequestCollection = client.db('assetManagement').collection('Customrequests')
 
 
         app.post('/adddAdmin', async (req, res) => {
@@ -215,9 +216,9 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/admin-request/:email', async(req, res) =>{
+        app.get('/admin-request/:email', async (req, res) => {
             const Email = req.params.email
-            const filter = {'singleAsset.email': Email}
+            const filter = { 'singleAsset.email': Email }
             const result = await RequestCollection.find(filter).toArray()
             res.json(result)
         })
@@ -320,7 +321,7 @@ async function run() {
                     assetQuantity: +1
                 }
             }
-            const query = {_id: new ObjectId(Id)}
+            const query = { _id: new ObjectId(Id) }
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
@@ -330,9 +331,22 @@ async function run() {
             const updateAssets = await AssetCollection.updateOne(filter, UpdateAsset)
             const result = await RequestCollection.updateOne(query, updateDoc, options)
 
-            res.send({result, updateAssets})
+            res.send({ result, updateAssets })
 
-            })
+        })
+
+        app.post('/custom-Request', async(req, res) =>{
+            const requestData = req.body
+            const result = await CustomRequestCollection.insertOne(requestData)
+            res.send(result)
+        })
+
+        app.get('/custom-request/:email', async(req, res) =>{
+            const email = req.params.email
+            const query = await CustomRequestCollection.find()
+        })
+
+
 
 
 
