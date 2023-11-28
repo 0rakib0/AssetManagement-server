@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const port = process.env.POST || 5000
 
@@ -40,6 +41,45 @@ async function run() {
         const CustomRequestCollection = client.db('assetManagement').collection('Customrequests')
 
 
+        const verifyToken = (req, res, next) => {
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: "Forbidden Access" })
+            }
+            const token = req.headers.authorization.split(' ')[1]
+            if (!token) {
+                return res.status(401).send({ message: "Forbidden Access" })
+            }
+            jwt.verify(token, process.env.SecretKey, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: "Forbidden Access" })
+                }
+                req.decoded = decoded
+                next()
+            })
+        }
+
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            const isAdmin = user?.role === 'admin'
+            if (!isAdmin) {
+                return res.status(403).send({ message: 'Forbidden Access' })
+            }
+            next()
+        }
+
+
+        // jwt releted API
+        app.post('/jwt', (req, res) => {
+            const user = req.body
+            console.log('Hello Bangladesh')
+            const token = jwt.sign(user, process.env.SecretKey, { expiresIn: '1h' })
+            res.send({ token })
+        })
+
+
+
         app.post('/adddAdmin', async (req, res) => {
             const UserData = req.body
             const result = await userCollection.insertOne(UserData)
@@ -50,6 +90,7 @@ async function run() {
         app.get('/asset-list/:email', async (req, res) => {
             const email = req.params.email
             const queryValue = req.query
+            console.log(queryValue)
 
             const querys = { email: email }
             if (queryValue.search) {
@@ -91,6 +132,19 @@ async function run() {
             }
         })
 
+        app.delete('/delete-asset/:id', async (req, res) => {
+            const Id = req.params.id
+            const query = { _id: new ObjectId(Id) }
+            const result = await AssetCollection.deleteOne(query)
+            res.send(result)
+        })
+
+        app.get('/asset/:id', async (req, res) => {
+            const Id = req.params.id
+            const query = { _id: new ObjectId(Id) }
+            const result = await AssetCollection.findOne(query)
+            res.send(result)
+        })
 
         app.get('/all-asset', async (req, res) => {
             const queryValue = req.query
@@ -223,6 +277,47 @@ async function run() {
             res.json(result)
         })
 
+        app.put('/aprove-request/:id', async (req, res) => {
+            const Id = req.params.id
+            const query = { _id: new ObjectId(Id) }
+            const updateRequest = {
+                $set: {
+                    isAprove: true
+                }
+            }
+            const result = await RequestCollection.updateOne(query, updateRequest)
+            res.send(result)
+        })
+
+
+        app.get('/all-custom-request', async (req, res) => {
+            console.log('Hello')
+            const ressult = await CustomRequestCollection.find().toArray()
+            res.send(ressult)
+        })
+
+        app.put('/update-custom-request/:id', async (req, res) => {
+            const Id = req.params.id
+            const query = { _id: new ObjectId(Id) }
+            const options = { upsert: true };
+            const updateRequest = {
+                $set: {
+                    isAprove: true
+                }
+            }
+            const result = await CustomRequestCollection.updateOne(query, updateRequest, options)
+            res.send(result)
+
+        })
+        app.delete('/cansel-custom-requst/:id', async (req, res) => {
+            const Id = req.params.id
+            const query = { _id: new ObjectId(Id) }
+            const result = await CustomRequestCollection.deleteOne(query)
+            res.send(result)
+        })
+
+
+
 
 
 
@@ -335,15 +430,18 @@ async function run() {
 
         })
 
-        app.post('/custom-Request', async(req, res) =>{
+        app.post('/custom-Request', async (req, res) => {
             const requestData = req.body
             const result = await CustomRequestCollection.insertOne(requestData)
             res.send(result)
         })
 
-        app.get('/custom-request/:email', async(req, res) =>{
+        app.get('/custom-request/:email', async (req, res) => {
             const email = req.params.email
-            const query = await CustomRequestCollection.find()
+            const query = { userEmail: email }
+            const result = await CustomRequestCollection.find(query)
+            res.send(result)
+
         })
 
 
