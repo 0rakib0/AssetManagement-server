@@ -521,8 +521,21 @@ async function run() {
             res.send(LimitQuintity)
         })
 
-        app.get('/parcentage/:email', async(req, res) =>{
-            console.log('Hello Parcentage comming----')
+        app.get('/parcentage', async(req, res) =>{
+            const query1 = {
+                $and: [
+                    {'singleAsset.assetType': 'returnable'}
+                ]
+            }
+
+            const query2 = {
+                $and: [
+                    {'singleAsset.assetType': 'nonreturnable'}
+                ]
+            }
+            const request1 = await RequestCollection.find(query1).toArray()
+            const request2 = await RequestCollection.find(query2).toArray()
+            res.send({request1, request2})
         })
 
         // --------------------------Employe Dashbord ----------------------
