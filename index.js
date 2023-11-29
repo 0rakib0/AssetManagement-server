@@ -83,7 +83,7 @@ async function run() {
         app.get('/user/admin/:email', async (req, res) => {
             const email = req.params.email
             console.log(email)
-            const query = {email: email}
+            const query = { email: email }
             const result = await userCollection.findOne(query)
             // if (email !== req.decoded.email) {
             //     return res.status(403).send({ message: 'Unauthorize Access' })
@@ -468,12 +468,36 @@ async function run() {
 
         // -------------------------- Admin Dashbord -----------------------
 
-        app.get('/pending-request', async(req, res) =>{
-            const query = {isAprove: false}
-            const result = await RequestCollection.find()
+        app.get('/pending-request', async (req, res) => {
+            const query = { isAprove: false }
+            const result = await RequestCollection.find(query).limit(5).toArray()
             res.send(result)
         })
 
+        app.get('/top-requests', async (req, res) => {
+            const pipeline = [
+                {
+                    $group: {
+                        _id: '$singleAsset',
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: { count: -1 }
+                },
+                {
+                    $limit: 4 // Adjust the limit based on how many top items you want to retrieve
+                }
+            ];
+
+            const topRequests = await RequestCollection.aggregate(pipeline).toArray();
+            res.send(topRequests);
+
+        });
+
+        app.get('/limit-stock', async(req, res) =>{
+            
+        })
 
 
         // --------------------------Employe Dashbord ----------------------
