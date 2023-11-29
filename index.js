@@ -466,6 +466,19 @@ async function run() {
         })
 
 
+        // -------------------------- Admin Dashbord -----------------------
+
+        app.get('/pending-request', async(req, res) =>{
+            const query = {isAprove: false}
+            const result = await RequestCollection.find()
+            res.send(result)
+        })
+
+
+
+        // --------------------------Employe Dashbord ----------------------
+
+
 
 
 
