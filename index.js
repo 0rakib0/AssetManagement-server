@@ -83,7 +83,8 @@ async function run() {
         app.get('/user/admin/:email', async (req, res) => {
             const email = req.params.email
             console.log(email)
-            const query = 
+            const query = {email: email}
+            const result = await userCollection.findOne(query)
             // if (email !== req.decoded.email) {
             //     return res.status(403).send({ message: 'Unauthorize Access' })
             // }
@@ -94,7 +95,8 @@ async function run() {
             // if (user) {
             //     admin = user?.isAdmin === true
             // }
-            // res.send(admin)
+            const isAdmin = result.isAdmin
+            res.send(isAdmin)
         })
 
 
