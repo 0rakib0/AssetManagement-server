@@ -495,10 +495,35 @@ async function run() {
 
         });
 
-        app.get('/limit-stock', async(req, res) =>{
-            
+        app.get('/limit-stock/:email', async(req, res) =>{
+            const email = req.params.email
+            console.log(email)
+            const query = {
+                $and: [
+                    {email: email},
+                    {assetQuantity:{$lt:10}}
+                ]
+            }
+            const LimitQuintity = await AssetCollection.find(query).toArray()
+            res.send(LimitQuintity)
         })
 
+        app.get('/out-stock/:email', async(req, res) =>{
+            const email = req.params.email
+            console.log(email)
+            const query = {
+                $and: [
+                    {email: email},
+                    {assetQuantity: { $eq: 0 }}
+                ]
+            }
+            const LimitQuintity = await AssetCollection.find(query).toArray()
+            res.send(LimitQuintity)
+        })
+
+        app.get('/parcentage/:email', async(req, res) =>{
+            console.log('Hello Parcentage comming----')
+        })
 
         // --------------------------Employe Dashbord ----------------------
 
