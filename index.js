@@ -80,6 +80,25 @@ async function run() {
 
 
 
+        app.get('/user/admin/:email', async (req, res) => {
+            const email = req.params.email
+            console.log(email)
+            const query = 
+            // if (email !== req.decoded.email) {
+            //     return res.status(403).send({ message: 'Unauthorize Access' })
+            // }
+            // const query = { email: email }
+            // const user = await userCollection.findOne(query)
+            // console.log(user)
+            // let admin = false
+            // if (user) {
+            //     admin = user?.isAdmin === true
+            // }
+            // res.send(admin)
+        })
+
+
+
         app.post('/adddAdmin', async (req, res) => {
             const UserData = req.body
             const result = await userCollection.insertOne(UserData)
