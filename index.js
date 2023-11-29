@@ -73,7 +73,6 @@ async function run() {
         // jwt releted API
         app.post('/jwt', (req, res) => {
             const user = req.body
-            console.log('Hello Bangladesh')
             const token = jwt.sign(user, process.env.SecretKey, { expiresIn: '1h' })
             res.send({ token })
         })
@@ -82,7 +81,6 @@ async function run() {
 
         app.get('/user/admin/:email', async (req, res) => {
             const email = req.params.email
-            console.log(email)
             const query = { email: email }
             const result = await userCollection.findOne(query)
             // if (email !== req.decoded.email) {
@@ -111,7 +109,6 @@ async function run() {
         app.get('/asset-list/:email', async (req, res) => {
             const email = req.params.email
             const queryValue = req.query
-            console.log(queryValue)
 
             const querys = { email: email }
             if (queryValue.search) {
@@ -312,7 +309,6 @@ async function run() {
 
 
         app.get('/all-custom-request', async (req, res) => {
-            console.log('Hello')
             const ressult = await CustomRequestCollection.find().toArray()
             res.send(ressult)
         })
@@ -460,7 +456,7 @@ async function run() {
         app.get('/custom-request/:email', async (req, res) => {
             const email = req.params.email
             const query = { userEmail: email }
-            const result = await CustomRequestCollection.find(query)
+            const result = await CustomRequestCollection.find(query).toArray()
             res.send(result)
 
         })
@@ -497,7 +493,6 @@ async function run() {
 
         app.get('/limit-stock/:email', async(req, res) =>{
             const email = req.params.email
-            console.log(email)
             const query = {
                 $and: [
                     {email: email},
@@ -510,7 +505,6 @@ async function run() {
 
         app.get('/out-stock/:email', async(req, res) =>{
             const email = req.params.email
-            console.log(email)
             const query = {
                 $and: [
                     {email: email},
@@ -540,9 +534,19 @@ async function run() {
 
         // --------------------------Employe Dashbord ----------------------
 
+        app.get('/my-pending-request/:email', async(req, res) =>{
+            const email = req.params.email
+            const query = {userEmail: email}
+            const result = await RequestCollection.find(query).toArray()
+            res.send(result)
+        })
 
-
-
+        app.get('/all-request-emp/:email', async(req, res) =>{
+            const email = req.params.email
+            const query = {userEmail: email}
+            const result = await RequestCollection.countDocuments(query)
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
