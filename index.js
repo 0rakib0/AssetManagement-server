@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const port = process.env.POST || 5000
 
+const stripe = require("stripe")('sk_test_51OEoO4BlrghrygtuCbkGUjrtQywdtw45jgAT1nyTzunkqxOaPtiMfmCNLWm1e7OzMu5vgcDsF6V5dHNsKhvkkLfx00gdDo00zx');
+
 
 
 
@@ -491,61 +493,85 @@ async function run() {
 
         });
 
-        app.get('/limit-stock/:email', async(req, res) =>{
+        app.get('/limit-stock/:email', async (req, res) => {
             const email = req.params.email
             const query = {
                 $and: [
-                    {email: email},
-                    {assetQuantity:{$lt:10}}
+                    { email: email },
+                    { assetQuantity: { $lt: 10 } }
                 ]
             }
             const LimitQuintity = await AssetCollection.find(query).toArray()
             res.send(LimitQuintity)
         })
 
-        app.get('/out-stock/:email', async(req, res) =>{
+        app.get('/out-stock/:email', async (req, res) => {
             const email = req.params.email
             const query = {
                 $and: [
-                    {email: email},
-                    {assetQuantity: { $eq: 0 }}
+                    { email: email },
+                    { assetQuantity: { $eq: 0 } }
                 ]
             }
             const LimitQuintity = await AssetCollection.find(query).toArray()
             res.send(LimitQuintity)
         })
 
-        app.get('/parcentage', async(req, res) =>{
+        app.get('/parcentage', async (req, res) => {
             const query1 = {
                 $and: [
-                    {'singleAsset.assetType': 'returnable'}
+                    { 'singleAsset.assetType': 'returnable' }
                 ]
             }
 
             const query2 = {
                 $and: [
-                    {'singleAsset.assetType': 'nonreturnable'}
+                    { 'singleAsset.assetType': 'nonreturnable' }
                 ]
             }
             const request1 = await RequestCollection.find(query1).toArray()
             const request2 = await RequestCollection.find(query2).toArray()
-            res.send({request1, request2})
+            res.send({ request1, request2 })
         })
 
         // --------------------------Employe Dashbord ----------------------
 
-        app.get('/my-pending-request/:email', async(req, res) =>{
+        app.get('/my-pending-request/:email', async (req, res) => {
             const email = req.params.email
-            const query = {userEmail: email}
+            const query = { userEmail: email }
             const result = await RequestCollection.find(query).toArray()
             res.send(result)
         })
 
-        app.get('/all-request-emp/:email', async(req, res) =>{
+        app.get('/all-request-emp/:email', async (req, res) => {
             const email = req.params.email
-            const query = {userEmail: email}
+            const query = { userEmail: email }
             const result = await RequestCollection.countDocuments(query)
             res.send(result)
+        })
+
+
+        // ------------------------payment intanr
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body
+            const amount = parseInt(price * 100)
+            if (amount) {
+
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: "usd",
+                    payment_method_types: ['card']
+                })
+                res.send({
+                    clientSecret: paymentIntent.client_secret
+                })
+            }
+
+            // res.send({
+            //     clientSecret: paymentIntent.client_secret
+            // })
+
         })
 
         // Send a ping to confirm a successful connection
