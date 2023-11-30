@@ -85,7 +85,7 @@ async function run() {
             const email = req.params.email
             const query = { email: email }
             const result = await userCollection.findOne(query)
-            const isAdmin = result.isAdmin
+            const isAdmin = result?.isAdmin
             res.send(isAdmin)
         })
 
@@ -96,11 +96,11 @@ async function run() {
             res.send(result)
         })
 
-        app.put('/update-paid/:email', async(req, res) =>{
+        app.put('/update-paid/:email', async (req, res) => {
             const email = req.params.email
-            const query = {email: email}
+            const query = { email: email }
             const update = {
-                $set : {
+                $set: {
                     isPaid: true
                 }
             }
@@ -108,9 +108,31 @@ async function run() {
             console.log(ressult)
         })
 
+        app.put('/update-user/:email', async (req, res) => {
+            const UpdateData = req.body
+            const email = req.params.email
+            const option = { upsert: true }
+            const query = { email: email }
+
+            const Update = {
+                $set: {
+                    full_name: UpdateData.full_name,
+                    dob: UpdateData.dob
+                }
+            }
+            const result = await userCollection.updateOne(query, Update)
+            console.log(result)
+            res.send(result)
+        })
 
         app.post('/adddAdmin', async (req, res) => {
             const UserData = req.body
+            console.log(UserData.email)
+            const query = { email: UserData.email }
+            const isExist = await userCollection.findOne(query)
+            if (isExist) {
+                return res.send({ message: 'user already exists', insertedId: null })
+            }
             const result = await userCollection.insertOne(UserData)
             res.send(result)
 
