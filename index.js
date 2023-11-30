@@ -105,7 +105,7 @@ async function run() {
                 }
             }
             const ressult = await userCollection.updateOne(query, update)
-            console.log(ressult)
+            res.send(ressult)
         })
 
         app.put('/update-user/:email', async (req, res) => {
@@ -121,13 +121,11 @@ async function run() {
                 }
             }
             const result = await userCollection.updateOne(query, Update)
-            console.log(result)
             res.send(result)
         })
 
         app.post('/adddAdmin', async (req, res) => {
             const UserData = req.body
-            console.log(UserData.email)
             const query = { email: UserData.email }
             const isExist = await userCollection.findOne(query)
             if (isExist) {
@@ -141,7 +139,6 @@ async function run() {
         app.get('/asset-list/:email', async (req, res) => {
             const email = req.params.email
             const queryValue = req.query
-
             const querys = { email: email }
             if (queryValue.search) {
                 const combinedFilter = {
