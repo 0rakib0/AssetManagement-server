@@ -85,20 +85,28 @@ async function run() {
             const email = req.params.email
             const query = { email: email }
             const result = await userCollection.findOne(query)
-            // if (email !== req.decoded.email) {
-            //     return res.status(403).send({ message: 'Unauthorize Access' })
-            // }
-            // const query = { email: email }
-            // const user = await userCollection.findOne(query)
-            // console.log(user)
-            // let admin = false
-            // if (user) {
-            //     admin = user?.isAdmin === true
-            // }
             const isAdmin = result.isAdmin
             res.send(isAdmin)
         })
 
+        app.get('/admin-info/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await userCollection.findOne(query)
+            res.send(result)
+        })
+
+        app.put('/update-paid/:email', async(req, res) =>{
+            const email = req.params.email
+            const query = {email: email}
+            const update = {
+                $set : {
+                    isPaid: true
+                }
+            }
+            const ressult = await userCollection.updateOne(query, update)
+            console.log(ressult)
+        })
 
 
         app.post('/adddAdmin', async (req, res) => {
